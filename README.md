@@ -1,6 +1,6 @@
-# 教会场地预约网站
+# 场地预约网站
 
-一个手机端友好的静态网页，用于教会场地预约：场地明细、布局示意、预约流程、可约看板、在线预约、恢复打卡、守则制度、联系方式。
+一个手机端友好的静态网页，用于场地预约：场地明细、布局示意、预约流程、可约看板、在线预约、恢复打卡、守则制度、联系方式。
 
 ## 快速开始
 
@@ -38,7 +38,7 @@ phone: '138-1234-5678'
 
 ### 2. 修改场地布局
 每个场地都有 `layout.items`，是"示意图布局"（坐标 0~400 × 0~300）。支持的类型有：
-`stage 讲台` `screen 投影幕` `board 白板` `speaker 音响` `piano 钢琴` `rows 座椅区` `table 桌椅` `round 圆桌` `sofa 沙发` `teatable 茶几` `water 茶水台` `cross 十字架` `bookshelf 书架` `door 入口` `window 窗` `ac 空调` `power 电源` `trash 垃圾桶` `closet 储物柜` `carpet 地毯`。
+`stage 讲台` `screen 投影幕` `board 白板` `speaker 音响` `piano 钢琴` `rows 座椅区` `table 桌椅` `round 圆桌` `sofa 沙发` `teatable 茶几` `water 茶水台` `bookshelf 书架` `door 入口` `window 窗` `ac 空调` `power 电源` `trash 垃圾桶` `closet 储物柜` `carpet 地毯`。
 
 ```js
 { kind: 'window', x: 20, y: 60, w: 18, h: 100, label: '窗' }
@@ -73,9 +73,9 @@ phone: '138-1234-5678'
 
 ## 接入云端数据库（多人实时同步，可选）
 
-当前预约数据保存在各人浏览器 localStorage（单机演示）。要做成全教会多人实时同步，需要一个后端，常见方案：
+当前预约数据保存在各人浏览器 localStorage（单机演示）。要做成全团队多人实时同步，需要一个后端，常见方案：
 
-### 方案 A：微信小程序云开发（推荐给教会使用场景）
+### 方案 A：微信小程序云开发（推荐给团队使用场景）
 1. 开通微信小程序「云开发」，创建环境；
 2. 建集合 `bookings`，把 `index.html` 里预约提交逻辑改为调用 `wx.cloud.database().collection('bookings').add({ data: rec })`；
 3. 看板用 `watch()` 实时监听集合变化。
