@@ -60,7 +60,7 @@
   <div class="toolbar">
     <div>
       <h1>场地预约 · 二维码海报</h1>
-      <p>打印后张贴在每个场地门口，家人扫码即可查看预约说明并预约</p>
+      <p>打印后张贴在每个场地门口，扫码即可查看预约说明并预约</p>
     </div>
     <button class="btn" onclick="window.print()">🖨️ 打印全部海报</button>
   </div>
@@ -71,7 +71,6 @@
   <script src="data.js"></script>
   <script>
     const BASE = 'https://lqjymnl2026.github.io/venue-booking/';
-    const CHURCH = '教会';
 
     function qr(container, text, size) {
       container.innerHTML = '';
@@ -87,11 +86,11 @@
         <article class="poster${isGeneral ? ' general' : ''}">
           <div class="poster-left">
             <div>
-              <p class="church">${CHURCH} · VENUE BOOKING</p>
+              <p class="church">VENUE BOOKING</p>
               <h2>${isGeneral ? '场地预约' : '场地预约'}</h2>
               <p class="sub">${isGeneral ? '扫码查看全部场地并预约' : '扫码预约 · ' + v.name}</p>
             </div>
-            <p class="verse">【彼前4:10】各人要照所得的恩赐彼此服侍，作神百般恩赐的好管家</p>
+            <p class="verse">场地有限，彼此珍惜 · 使用完毕，恢复原样</p>
           </div>
           <div class="poster-right">
             <h3 class="p-name">${isGeneral ? '扫码进入预约' : v.name}</h3>
