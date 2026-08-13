@@ -34,6 +34,7 @@
       <a href="#board">可约看板</a>
       <a href="#stats">统计</a>
       <a href="posters.html">二维码海报</a>
+      <a href="admin.html">后台</a>
       <a href="#book">在线预约</a>
       <a href="#checkin">恢复打卡</a>
       <a href="#rules">守则制度</a>
@@ -310,7 +311,7 @@
       场地有限，彼此珍惜 · 使用完毕，恢复原样
     </div>
     <p>场地预约 · 愿每一个场地都被好好珍惜 ✦</p>
-    <p class="footer-small">📱 <a href="posters.html" style="color:inherit">打印场地二维码海报</a> · 本站为静态网页，可分享链接使用 · 数据可在 <code>data.js</code> 中修改</p>
+    <p class="footer-small">📱 <a href="posters.html" style="color:inherit">打印场地二维码海报</a> · 🛠 <a href="admin.html" style="color:inherit">后台管理</a> · 本站为静态网页，可分享链接使用 · 数据可在 <code>data.js</code> 中修改</p>
   </footer>
 
   <!-- ===== 预约结果弹窗 ===== -->
@@ -334,7 +335,9 @@
 
   <div class="toast" id="toast" hidden></div>
 
+  <script src="xlsx.full.min.js"></script>
   <script src="data.js"></script>
+  <script src="store.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
