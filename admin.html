@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>场地预约 · 后台管理</title>
+  <meta name="robots" content="noindex,nofollow">
+  <link rel="icon" href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="22" fill="%236b8e5a"/><text x="50" y="72" font-size="58" text-anchor="middle" fill="white" font-family="sans-serif">管</text></svg>'>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .admin-top{max-width:1080px;margin:0 auto;padding:22px 18px 0;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px}
+    .admin-top h1{font-size:22px;color:var(--primary-dark)}
+    .admin-top .links a{font-size:14px;color:var(--primary);text-decoration:none;margin-left:14px}
+    .admin-top .links a:hover{text-decoration:underline}
+    .admin-main{max-width:1080px;margin:0 auto;padding:20px 18px 60px}
+    .admin-grid{display:grid;grid-template-columns:2fr 1fr;gap:18px;align-items:start}
+    .admin-card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:20px;margin-bottom:18px}
+    .admin-card h2{font-size:17px;color:var(--primary-dark);margin-bottom:14px}
+    .admin-table-wrap{overflow-x:auto}
+    table.admin-table{width:100%;border-collapse:collapse;font-size:13px;min-width:820px}
+    .admin-table th,.admin-table td{border:1px solid var(--line);padding:9px 8px;text-align:left;vertical-align:top}
+    .admin-table thead th{background:var(--primary);color:#fff;font-weight:600;white-space:nowrap}
+    .admin-table tr:nth-child(even){background:#fbf8f1}
+    .admin-table .del-btn{background:#fdf1ec;color:var(--red);border:1px solid #f0d3c8;border-radius:999px;padding:4px 10px;font-size:12px;cursor:pointer;white-space:nowrap}
+    .admin-table .del-btn:hover{background:var(--red);color:#fff}
+    .admin-badge{display:inline-block;background:var(--gold-soft);color:#7a5d12;border-radius:999px;padding:1px 8px;font-size:11px}
+    .admin-badge.demo{background:#f6ded8;color:#a0402e}
+    .ck-item{display:flex;gap:12px;background:#fbf8f1;border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:10px}
+    .ck-item img{max-width:110px;max-height:90px;border-radius:8px}
+    .ck-item .ck-info{flex:1;font-size:13px}
+    .ck-item .ck-tags{margin-top:6px;display:flex;flex-wrap:wrap;gap:4px}
+    .ck-item .ck-tags span{background:var(--gold-soft);border-radius:999px;padding:1px 8px;font-size:11px}
+    .stat-rows{display:flex;flex-direction:column;gap:8px;font-size:13px}
+    .stat-row{display:flex;justify-content:space-between;background:var(--bg-alt);border-radius:8px;padding:7px 12px}
+    .stat-row b{color:var(--primary-dark)}
+    .admin-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px}
+    .empty{color:var(--ink-soft);font-size:13px;text-align:center;padding:26px 0}
+    .login-mask{position:fixed;inset:0;background:rgba(42,36,28,.6);display:flex;align-items:center;justify-content:center;z-index:300;padding:20px}
+    .login-box{background:#fff;border-radius:18px;padding:30px;max-width:360px;width:100%;text-align:center;box-shadow:0 18px 50px rgba(0,0,0,.3)}
+    .login-box h3{color:var(--primary-dark);margin-bottom:6px}
+    .login-box p{font-size:13px;color:var(--ink-soft);margin-bottom:16px}
+    .login-box input{width:100%;font-family:inherit;font-size:15px;padding:12px 14px;border:1.5px solid var(--line);border-radius:12px;margin-bottom:12px;outline:none}
+    .login-box input:focus{border-color:var(--primary)}
+    .login-box .err{color:var(--red);font-size:13px;margin-bottom:10px}
+    .notice{background:var(--gold-soft);border-radius:12px;padding:16px;font-size:14px;color:#5c4a12;line-height:1.8}
+    @media (max-width:860px){ .admin-grid{grid-template-columns:1fr} }
+  </style>
+</head>
+<body>
+  <div class="admin-top">
+    <h1>🛠 场地预约 · 后台管理</h1>
+    <div class="links">
+      <a href="index.html">← 返回主站</a>
+      <a href="#" id="logoutBtn" style="display:none">退出登录</a>
+    </div>
+  </div>
+
+  <main class="admin-main" id="adminMain">
+    <!-- 状态提示（JS 填充） -->
+    <div class="admin-card" id="modeCard"></div>
+
+    <div class="admin-grid">
+      <div>
+        <div class="admin-card">
+          <h2>📋 预约台账 <span class="admin-badge" id="bookCount"></span></h2>
+          <div class="admin-table-wrap" id="bookTable"></div>
+          <div class="admin-actions">
+            <button class="btn btn-primary" id="exportBtn">📥 一键导出 Excel</button>
+          </div>
+        </div>
+        <div class="admin-card">
+          <h2>✅ 恢复打卡记录 <span class="admin-badge" id="ckCount"></span></h2>
+          <div id="ckList"></div>
+        </div>
+      </div>
+      <div>
+        <div class="admin-card">
+          <h2>📊 使用统计</h2>
+          <div class="stat-rows" id="statBox"></div>
+        </div>
+        <div class="admin-card">
+          <h2>💾 数据备份</h2>
+          <p style="font-size:13px;color:var(--ink-soft);margin-bottom:12px">定期备份服务器数据，防止误删丢失。</p>
+          <div class="admin-actions">
+            <button class="btn btn-ghost" id="backupBtn">⬇️ 下载备份 JSON</button>
+            <button class="btn btn-ghost" id="restoreBtn">⬆️ 恢复备份</button>
+            <input type="file" id="restoreFile" accept=".json" hidden>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- 登录遮罩 -->
+  <div class="login-mask" id="loginMask">
+    <div class="login-box">
+      <h3>🔒 后台管理登录</h3>
+      <p>请输入管理密码</p>
+      <input type="password" id="pwInput" placeholder="管理密码" autocomplete="off">
+      <p class="err" id="pwErr" hidden>密码错误，请重试</p>
+      <button class="btn btn-primary" id="pwBtn" style="width:100%">登录</button>
+    </div>
+  </div>
+
+  <script src="xlsx.full.min.js"></script>
+  <script src="data.js"></script>
+  <script src="store.js"></script>
+  <script src="admin.js"></script>
+</body>
+</html>
