@@ -283,12 +283,26 @@ function allBookings() {
   return b;
 }
 
-function renderBoard() {
+// 接入 store.js：本地读写钩子（内网服务器模式下会自动使用共享数据）
+Store.localGetBookings = () => allBookings();
+Store.localGetCheckins = () => getLS(LS_CHECKIN, []);
+Store.localAddBooking = (rec) => { const b = getLS(LS_BOOK, []); b.push(rec); setLS(LS_BOOK, b); };
+Store.localAddCheckin = (rec) => {
+  const c = getLS(LS_CHECKIN, []);
+  c.push(rec);
+  setLS(LS_CHECKIN, c.slice(-20).map(r => ({ ...r, photo: r.photo && r.photo.length > 90000 ? '' : r.photo })));
+};
+Store.localDeleteBooking = (id) => { setLS(LS_BOOK, getLS(LS_BOOK, []).filter(x => x.id !== id)); };
+Store.localDeleteCheckin = (id) => { setLS(LS_CHECKIN, getLS(LS_CHECKIN, []).filter(x => x.id !== id)); };
+
+async function renderBoard() {
   const sel = $('#boardVenue');
   const venueId = sel.value || VENUES[0].id;
-  const bookings = allBookings().filter(b => b.venueId === venueId);
+  const all = await Store.getBookings();
+  const bookings = all.filter(b => b.venueId === venueId);
   const occupied = new Set(bookings.map(b => `${b.day}|${b.slot}`));
-  const demoOn = !getLS(LS_DEMO, false);
+  const serverMode = Store.mode === 'server';
+  const demoOn = !serverMode && !getLS(LS_DEMO, false);
 
   let html = '<table class="board-table"><thead><tr><th>时段</th>' + DAYS.map(d => `<th>${d}</th>`).join('') + '</tr></thead><tbody>';
   SLOTS.forEach(slot => {
@@ -317,9 +331,12 @@ function renderBoard() {
     });
   });
 
-  $('#boardNote').innerHTML = demoOn
-    ? '📌 当前包含 <b>示例数据</b>（演示看板效果）。本看板保存在本机浏览器，正式预约请以负责人确认为准。'
-    : '📌 示例数据已清除。本看板保存在本机浏览器，正式预约请以负责人确认为准。';
+  $('#boardNote').innerHTML = serverMode
+    ? '📌 <b>内网服务器模式</b>：看板为全教会共享实时数据，预约请以负责人确认为准。'
+    : (demoOn
+        ? '📌 当前包含 <b>示例数据</b>（演示看板效果）。本看板保存在本机浏览器，正式预约请以负责人确认为准。'
+        : '📌 示例数据已清除。本看板保存在本机浏览器，正式预约请以负责人确认为准。');
+  $('#toggleDemo').style.display = serverMode ? 'none' : '';
   $('#toggleDemo').textContent = demoOn ? '清除示例数据' : '恢复示例数据';
 }
 
@@ -341,7 +358,7 @@ function initBookForm() {
   $('#bDay').innerHTML = DAYS.map(d => `<option value="${d}">${d}</option>`).join('');
   $('#bSlot').innerHTML = SLOTS.map(s => `<option value="${s.id}">${s.label}（${s.time}）</option>`).join('');
 
-  $('#bookForm').addEventListener('submit', (e) => {
+  $('#bookForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const f = {
       venueId: $('#bVenue').value,
@@ -373,8 +390,7 @@ function initBookForm() {
     const text = lines.join('\n');
     $('#modalText').textContent = text;
 
-    // 保存到本地看板（完整台账）
-    const bookings = getLS(LS_BOOK, []);
+    // 保存（内网服务器共享 / 本机演示）
     const rec = {
       id: 'u' + Date.now(),
       venueId: f.venueId, day: f.day, slot: f.slot,
@@ -382,12 +398,15 @@ function initBookForm() {
       date: f.date, theme: f.theme, audience: f.audience,
       count: f.count, note: f.note, ts: new Date().toISOString(), demo: false
     };
-    bookings.push(rec);
-    setLS(LS_BOOK, bookings);
-    renderBoard();
-    renderStats();
-    syncBroadcast();
-    if ($('#remindCheck').checked) scheduleReminder(rec);
+    const saved = await Store.addBooking(rec);
+    if (saved) {
+      await renderBoard();
+      await renderStats();
+      syncBroadcast();
+      if ($('#remindCheck').checked) scheduleReminder(rec);
+    } else {
+      toast('⚠️ 预约保存失败，请重试');
+    }
 
     const callBtn = $('#callBtn');
     if (v.phone) {
@@ -471,8 +490,8 @@ function resizeImage(file, maxW, quality) {
   });
 }
 
-function renderRecords() {
-  const records = getLS(LS_CHECKIN, []);
+async function renderRecords() {
+  const records = await Store.getCheckins();
   const ul = $('#cRecords');
   if (!records.length) {
     ul.innerHTML = '<li class="records-empty">还没有打卡记录，使用场地后记得打卡哦～</li>';
@@ -516,7 +535,7 @@ function initCheckin() {
     }
   });
 
-  $('#cSave').addEventListener('click', () => {
+  $('#cSave').addEventListener('click', async () => {
     const doneItems = CHECKLIST.filter(c => checkState.items[c.id]).map(c => c.text);
     const v = VENUES.find(x => x.id === checkState.venueId);
     if (!doneItems.length) { toast('请至少勾选一项恢复清单'); return; }
@@ -528,16 +547,16 @@ function initCheckin() {
       photo: checkState.photo || '',
       time: new Date().toLocaleString('zh-CN', { hour12: false })
     };
-    const records = getLS(LS_CHECKIN, []);
-    records.push(record);
-    // 防止 localStorage 过大：仅保留最近 20 条，照片压缩存储
-    const slim = records.slice(-20).map(r => ({ ...r, photo: r.photo && r.photo.length > 90000 ? '' : r.photo }));
-    setLS(LS_CHECKIN, slim);
-    checkState.photo = '';
-    $('#cPhotoPreview').hidden = true;
-    $('#cPhoto').value = '';
-    renderRecords();
-    toast(`✅ 已保存 ${v.name} 打卡记录`);
+    const ok = await Store.addCheckin(record);
+    if (ok) {
+      checkState.photo = '';
+      $('#cPhotoPreview').hidden = true;
+      $('#cPhoto').value = '';
+      await renderRecords();
+      toast(`✅ 已保存 ${v.name} 打卡记录`);
+    } else {
+      toast('⚠️ 打卡保存失败，请重试');
+    }
   });
 
   $('#cReset').addEventListener('click', () => {
@@ -551,6 +570,7 @@ function initCheckin() {
   });
 
   $('#cClear').addEventListener('click', () => {
+    if (Store.mode === 'server') { toast('内网模式下请到「后台管理」中删除记录'); return; }
     if (confirm('确定清空本机所有打卡记录吗？')) {
       setLS(LS_CHECKIN, []);
       renderRecords();
@@ -584,11 +604,65 @@ function renderContacts() {
     : '✅ 所有负责人联系电话已配置，点击「一键拨打」即可联系。';
 }
 
+
+async function exportXLSX() {
+  const bookings = await Store.getBookings();
+  const checkins = await Store.getCheckins();
+  if (!bookings.length && !checkins.length) { toast('暂无数据可导出'); return; }
+  if (typeof XLSX === 'undefined') { toast('Excel 库未加载，改用 CSV 导出'); exportCSV(); return; }
+
+  const book = XLSX.utils.book_new();
+
+  // 工作表1：预约台账
+  const header = ['序号','场地','团队/部门','联系人','电话','周几','时段','具体日期','活动主题','参加对象','人数','备注','来源','提交时间'];
+  const rows = bookings.map((b,i) => [
+    i+1,
+    (VENUES.find(v=>v.id===b.venueId)||{}).name||b.venueId,
+    b.area||'', b.contact||'', b.phone||'',
+    b.day||'', (SLOTS.find(s=>s.id===b.slot)||{}).label||b.slot||'',
+    b.date||'', b.theme||'', b.audience||'', b.count||'',
+    b.note||'', b.demo ? '示例' : '正式', b.ts ? new Date(b.ts).toLocaleString('zh-CN',{hour12:false}) : ''
+  ]);
+  const ws1 = XLSX.utils.aoa_to_sheet([header, ...rows]);
+  ws1['!cols'] = [{wch:6},{wch:14},{wch:14},{wch:10},{wch:14},{wch:6},{wch:8},{wch:12},{wch:22},{wch:14},{wch:6},{wch:22},{wch:6},{wch:18}];
+  XLSX.utils.book_append_sheet(book, ws1, '预约台账');
+
+  // 工作表2：恢复打卡
+  const ch = [['场地','打卡人','时间','完成项数','完成清单','照片']];
+  checkins.forEach(r => {
+    const v = VENUES.find(x => x.id === r.venueId);
+    ch.push([
+      v ? v.name : r.venueId, r.contact || '未署名', r.time || '',
+      (r.items || []).length + '/' + CHECKLIST.length,
+      (r.items || []).join('；'),
+      r.photo ? '有' : '无'
+    ]);
+  });
+  const ws2 = XLSX.utils.aoa_to_sheet(ch);
+  ws2['!cols'] = [{wch:14},{wch:10},{wch:18},{wch:10},{wch:50},{wch:8}];
+  XLSX.utils.book_append_sheet(book, ws2, '恢复打卡');
+
+  // 工作表3：使用统计
+  const stats = [['统计项','名称','次数']];
+  const byVenue={}, bySlot={}, byDay={};
+  bookings.forEach(b => { byVenue[b.venueId]=(byVenue[b.venueId]||0)+1; bySlot[b.slot]=(bySlot[b.slot]||0)+1; byDay[b.day]=(byDay[b.day]||0)+1; });
+  Object.entries(byVenue).sort((a,b)=>b[1]-a[1]).forEach(([id,c]) => stats.push(['场地热度',(VENUES.find(v=>v.id===id)||{}).name||id,c]));
+  SLOTS.forEach(s => stats.push(['时段热度', s.label, bySlot[s.id]||0]));
+  DAYS.forEach(d => stats.push(['周几热度', d, byDay[d]||0]));
+  const ws3 = XLSX.utils.aoa_to_sheet(stats);
+  ws3['!cols'] = [{wch:12},{wch:16},{wch:8}];
+  XLSX.utils.book_append_sheet(book, ws3, '使用统计');
+
+  XLSX.writeFile(book, '场地预约台账_' + new Date().toISOString().slice(0,10) + '.xlsx');
+  toast('📥 已一键导出 Excel（台账/打卡/统计 3 个工作表）');
+}
+
+
 /* =========================================================
    8. 使用统计 / 导出台账 / 深链接
    ========================================================= */
-function renderStats() {
-  const bookings = allBookings();
+async function renderStats() {
+  const bookings = await Store.getBookings();
   const byVenue = {}, bySlot = {}, byDay = {};
   bookings.forEach(b => {
     byVenue[b.venueId] = (byVenue[b.venueId]||0)+1;
@@ -617,12 +691,15 @@ function renderStats() {
       <span class="b-label">${r.name}</span>
       <div class="bar-track"><div class="bar-fill" style="width:${(r.c/dMax*100).toFixed(0)}%"></div></div>
       <span class="b-val">${r.c}</span></div>`).join('');
-  const demoOn = !getLS(LS_DEMO, false);
-  $('#statNote').innerHTML = `共 <b>${bookings.length}</b> 条预约记录${demoOn ? '（含 4 条示例数据，可在看板清除）' : ''} · 数据保存在本机浏览器`;
+  const serverMode = Store.mode === 'server';
+  const demoOn = !serverMode && !getLS(LS_DEMO, false);
+  $('#statNote').innerHTML = serverMode
+    ? `共 <b>${bookings.length}</b> 条预约记录 · 数据保存在内网服务器（全教会共享）`
+    : `共 <b>${bookings.length}</b> 条预约记录${demoOn ? '（含 4 条示例数据，可在看板清除）' : ''} · 数据保存在本机浏览器`;
 }
 
-function exportCSV() {
-  const bookings = allBookings();
+async function exportCSV() {
+  const bookings = await Store.getBookings();
   if (!bookings.length) { toast('暂无预约数据可导出'); return; }
   const header = ['序号','场地','团队/部门','联系人','电话','周几','时段','具体日期','活动主题','参加对象','人数','备注','来源','提交时间'];
   const rows = bookings.map((b,i) => [
@@ -662,7 +739,8 @@ function handleDeepLink() {
 /* =========================================================
    初始化
    ========================================================= */
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+  await Store.init();
   renderVenueTable();
   renderLayoutTabs();
   renderRules();
@@ -671,10 +749,10 @@ document.addEventListener('DOMContentLoaded', () => {
   initModal();
   initCheckin();
   renderContacts();
-  renderStats();
+  await renderStats();
   setupSyncListener();
   checkDueReminders();
   handleDeepLink();
   $('#remindBtn').addEventListener('click', requestNotifyPermission);
-  $('#exportBtn').addEventListener('click', exportCSV);
+  $('#exportBtn').addEventListener('click', exportXLSX);
 });
