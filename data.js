@@ -18,8 +18,8 @@ const VENUES = [
     manager: '吴宁宁',
     phone: '138-0000-0001',          // TODO: 填写真实电话
     capacity: '50人以上',
-    audience: '导师及导师以上',
-    note: '大型聚会、会议、培训',
+    audience: '组长及以上',
+    note: '大型活动、会议、培训',
     book: { advance: '至少提前1天', maxDuration: '每次不超过3小时' },
     layout: {
       type: 'hall',
@@ -42,16 +42,16 @@ const VENUES = [
   },
   {
     id: 'enhuishi',
-    name: '恩惠室',
+    name: '和睦室',
     manager: '吴宁宁',
     phone: '138-0000-0001',
     capacity: '50人以上',
-    audience: '牧区活动或使用人数50人以上',
-    note: '牧区性活动',
+    audience: '团队活动或使用人数50人以上',
+    note: '团队性活动',
     book: { advance: '至少提前1天' },
     layout: {
       type: 'classroom',
-      title: '恩惠室 · 布局示意',
+      title: '和睦室 · 布局示意',
       items: [
         { kind: 'door',   x: 175, y: 268, w: 50, h: 18, label: '入口' },
         { kind: 'window', x: 20,  y: 50,  w: 18, h: 120, label: '窗' },
@@ -70,7 +70,7 @@ const VENUES = [
     manager: '许志军',
     phone: '138-0000-0002',
     capacity: '10-20人',
-    audience: '导师及导师以上或团队性活动',
+    audience: '组长及以上或团队性活动',
     note: '四面玻璃、采光好',
     book: { advance: '至少提前1天' },
     layout: {
@@ -116,8 +116,8 @@ const VENUES = [
     manager: '吴宁宁',
     phone: '138-0000-0001',
     capacity: '10-15人',
-    audience: '组长或导师层面（人数10-15人）',
-    note: '家庭式温馨聚会',
+    audience: '组长或骨干层面（人数10-15人）',
+    note: '家庭式温馨交流',
     book: { advance: '至少提前1天' },
     layout: {
       type: 'home',
@@ -136,21 +136,20 @@ const VENUES = [
   },
   {
     id: 'daogaoshi',
-    name: '祷告室',
+    name: '静心室',
     manager: '吴宁宁',
     phone: '138-0000-0001',
     capacity: '50人以上',
-    audience: '牧区活动或使用人数50人以上',
-    note: '祷告、退修',
+    audience: '团队活动或使用人数50人以上',
+    note: '静思、休息',
     book: { advance: '至少提前1天' },
     layout: {
       type: 'prayer',
-      title: '祷告室 · 布局示意',
+      title: '静心室 · 布局示意',
       items: [
         { kind: 'door',   x: 175, y: 268, w: 50, h: 18, label: '入口' },
-        { kind: 'cross',  x: 175, y: 20,  w: 50, h: 54, label: '十字架' },
         { kind: 'rows',   x: 80,  y: 96,  w: 240, h: 120, label: '座椅/跪凳区' },
-        { kind: 'closet', x: 40,  y: 60,  w: 44, h: 60, label: '圣经架' },
+        { kind: 'closet', x: 40,  y: 60,  w: 44, h: 60, label: '书柜' },
         { kind: 'ac',     x: 320, y: 210, w: 40, h: 14, label: '空调' },
         { kind: 'power',  x: 40,  y: 236, w: 40, h: 20, label: '电源' }
       ]
@@ -162,7 +161,7 @@ const VENUES = [
     manager: '吴宁宁',
     phone: '138-0000-0001',
     capacity: '30人以上',
-    audience: '教会或牧区性培训（组长层面以上，人数30人及以上）',
+    audience: '组织内部培训（组长层面以上，人数30人及以上）',
     note: '培训、学习',
     book: { advance: '至少提前1天' },
     layout: {
@@ -207,8 +206,8 @@ const VENUES = [
     manager: '吴宁宁',
     phone: '138-0000-0001',
     capacity: '15-20人',
-    audience: '主领（敬拜团）',
-    note: '敬拜团排练、练唱',
+    audience: '音乐/声乐团队',
+    note: '排练、练唱',
     book: { advance: '至少提前1天' },
     layout: {
       type: 'singing',
@@ -227,21 +226,20 @@ const VENUES = [
   },
   {
     id: 'xiaodaogaoshi',
-    name: '小祷告室',
+    name: '小静心室',
     manager: '周露露',
     phone: '138-0000-0004',
     capacity: '10人以内',
-    audience: '导师层面以上或代祷团队',
-    note: '代祷、灵修',
+    audience: '组长层面以上或关怀小组',
+    note: '静思、休息',
     book: { advance: '至少提前1天' },
     layout: {
       type: 'smallprayer',
-      title: '小祷告室 · 布局示意',
+      title: '小静心室 · 布局示意',
       items: [
         { kind: 'door',   x: 175, y: 268, w: 50, h: 18, label: '入口' },
-        { kind: 'cross',  x: 175, y: 20,  w: 50, h: 54, label: '十字架' },
         { kind: 'rows',   x: 110, y: 110, w: 180, h: 90, label: '座椅区' },
-        { kind: 'closet', x: 40,  y: 60,  w: 44, h: 60, label: '圣经架' },
+        { kind: 'closet', x: 40,  y: 60,  w: 44, h: 60, label: '书柜' },
         { kind: 'power',  x: 40,  y: 236, w: 40, h: 20, label: '电源' }
       ]
     }
@@ -252,8 +250,8 @@ const VENUES = [
     manager: '赵焕焕',
     phone: '138-0000-0005',
     capacity: '50人以上',
-    audience: '50人及以上（牧区性使用预约）',
-    note: '牧区性大型活动',
+    audience: '50人及以上（团队性使用预约）',
+    note: '团队性大型活动',
     book: { advance: '至少提前1天' },
     layout: {
       type: 'hall',
@@ -299,8 +297,8 @@ const VENUES = [
     manager: '赵焕焕',
     phone: '138-0000-0005',
     capacity: '约20人',
-    audience: '小组聚会（约20人）',   // TODO: 核对原表"小组聚会(201人)"是否为"20人"
-    note: '小组聚会',
+    audience: '小组活动（约20人）',   // TODO: 核对原表"小组活动(20人)"人数
+    note: '小组活动',
     book: { advance: '至少提前1天' },
     layout: {
       type: 'meeting',
@@ -320,8 +318,8 @@ const VENUES = [
     manager: '赵焕焕',
     phone: '138-0000-0005',
     capacity: '约12人',
-    audience: '小组聚会（约12人）',   // TODO: 核对原表"小组聚会(121人)"是否为"12人"
-    note: '小组聚会',
+    audience: '小组活动（约12人）',   // TODO: 核对原表"小组活动(12人)"人数
+    note: '小组活动',
     book: { advance: '至少提前1天' },
     layout: {
       type: 'meeting',
@@ -367,15 +365,15 @@ const PENALTIES = [
 
 // ---------- 场地预约守则 ----------
 const RULES = {
-  intro: '为了更好的节约教会资源，对场地的预约有以下要求：请参考场地预约明细表，根据此表预约。',
+  intro: '为了更好的节约公共资源，对场地的预约有以下要求：请参考场地预约明细表，根据此表预约。',
   items: [
-    { title: '预约不用', desc: '请至少提前一周说明，以便其他家人使用！（如：预约不用也不说明，发现两次以上者，停止本牧区使用此场地一个季度。）' },
-    { title: '长期使用', desc: '使用期限不超过3个月（公用场地：若是场地固定每周要用，最多预约时长一个季度，若是到期，可继续预约。晨祷除外）。' },
-    { title: '使用冲突', desc: '如小组或牧区预约场地与教会活动冲突的，小组或牧区需要顺服教会活动使用。' },
-    { title: '聚会结束', desc: '请关闭场地电源（如：灯、音响和电器设备），以及门窗。（备注：窗户未关：一扇20元；灯和风扇未关：一盏或一扇20元；空调未关：每个100元。）' },
+    { title: '预约不用', desc: '请至少提前一周说明，以便其他人使用！（如：预约不用也不说明，发现两次以上者，停止本团队使用此场地一个季度。）' },
+    { title: '长期使用', desc: '使用期限不超过3个月（公用场地：若是场地固定每周要用，最多预约时长一个季度，若是到期，可继续预约。晨间活动除外）。' },
+    { title: '使用冲突', desc: '如小组或团队预约场地与正式活动冲突的，小组或团队需要顺服正式活动使用。' },
+    { title: '活动结束', desc: '请关闭场地电源（如：灯、音响和电器设备），以及门窗。（备注：窗户未关：一扇20元；灯和风扇未关：一盏或一扇20元；空调未关：每个100元。）' },
     { title: '场地复原', desc: '请保持场地清洁卫生，垃圾随手带走。（卫生没有打扫或将垃圾带走的请在本周内将此场地大扫除一次，打卡证明！）' }
   ],
-  requiredInfo: '预约场地需要注明：牧区名、时间、周几、地点、活动主题、参加对象以及参加人数。',
-  note: '备注：每次聚会结束：请拍照打卡证明！',
-  verse: '【彼前4:10】各人要照所得的恩赐彼此服侍，作神百般恩赐的好管家'
+  requiredInfo: '预约场地需要注明：团队名、时间、周几、地点、活动主题、参加对象以及参加人数。',
+  note: '备注：每次活动结束：请拍照打卡证明！',
+  verse: '场地有限，彼此珍惜 · 使用完毕，恢复原样'
 };
