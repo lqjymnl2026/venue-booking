@@ -235,6 +235,24 @@ table.venue-table{width:100%;border-collapse:collapse;font-size:14px;min-width:7
   animation:toastIn .25s ease}
 @keyframes toastIn{from{opacity:0;transform:translate(-50%,12px)}to{opacity:1;transform:translate(-50%,0)}}
 
+
+/* ---------- Stats ---------- */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px}
+.stat-card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:22px}
+.stat-card h3{font-size:16px;color:var(--primary-dark);margin-bottom:14px}
+.bars{display:flex;flex-direction:column;gap:10px}
+.bar-row{display:grid;grid-template-columns:92px 1fr 40px;gap:8px;align-items:center;font-size:13px}
+.bar-row .b-label{color:var(--ink-soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar-track{background:var(--bg-alt);border-radius:999px;height:18px;overflow:hidden}
+.bar-fill{height:100%;border-radius:999px;background:linear-gradient(90deg,#7fa86c,#6b8e5a);min-width:2px;transition:width .5s ease}
+.bar-row .b-val{text-align:right;font-weight:700;color:var(--primary-dark)}
+.bar-row.top .bar-fill{background:linear-gradient(90deg,#d9b23a,#c9a227)}
+
+/* ---------- 提醒勾选 ---------- */
+.remind-check{display:flex;gap:8px;align-items:flex-start;margin-top:16px;font-size:13px;color:var(--ink-soft);
+  background:var(--bg-alt);border-radius:10px;padding:12px 14px}
+.remind-check input{accent-color:var(--primary);width:16px;height:16px;margin-top:3px;flex:0 0 auto}
+
 /* ---------- Responsive ---------- */
 @media (max-width:860px){
   .section-alt{margin:8px -18px 0;border-radius:20px}
@@ -243,6 +261,8 @@ table.venue-table{width:100%;border-collapse:collapse;font-size:14px;min-width:7
   .table-wrap{display:none}
   .checkin-wrap{grid-template-columns:1fr}
   .rules-grid{grid-template-columns:1fr}
+  .stats-grid{grid-template-columns:1fr}
+  .bar-row{grid-template-columns:80px 1fr 36px}
 }
 @media (min-width:861px){
   .only-mobile{display:none}
