@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>场地预约 · 二维码海报</title>
+  <link rel="icon" href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="22" fill="%236b8e5a"/><text x="50" y="72" font-size="58" text-anchor="middle" fill="white" font-family="sans-serif">约</text></svg>'>
+  <style>
+    :root{--ink:#3a342c;--ink-soft:#6f665a;--primary:#6b8e5a;--primary-dark:#557348;--gold:#c9a227;--gold-soft:#f2e8d5;--line:#e7dfce}
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;color:var(--ink);background:#ece7dc}
+    .toolbar{max-width:960px;margin:0 auto;padding:20px 18px;display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+    .toolbar h1{font-size:20px;color:var(--primary-dark)}
+    .toolbar p{font-size:13px;color:var(--ink-soft)}
+    .btn{display:inline-flex;align-items:center;gap:6px;border:none;cursor:pointer;font-family:inherit;font-size:15px;font-weight:600;
+      padding:11px 22px;border-radius:999px;text-decoration:none;background:var(--gold);color:#4a3608;box-shadow:0 4px 14px rgba(201,162,39,.35)}
+    .btn:hover{background:#d9b23a}
+    .posters{max-width:960px;margin:0 auto;padding:0 18px 40px;display:flex;flex-direction:column;gap:24px}
+
+    /* A4 海报卡片 */
+    .poster{background:#fff;border-radius:14px;box-shadow:0 8px 30px rgba(90,74,48,.14);overflow:hidden;
+      display:grid;grid-template-columns:1fr 1.1fr;min-height:420px}
+    .poster-left{padding:34px 28px;display:flex;flex-direction:column;justify-content:space-between;background:
+      linear-gradient(160deg,#5f8350,#3f5f38 70%,#2f4a2a);color:#fff}
+    .poster-left .church{font-size:12px;letter-spacing:.3em;opacity:.85;text-transform:uppercase}
+    .poster-left h2{font-size:34px;letter-spacing:.1em;margin:10px 0 6px}
+    .poster-left .sub{font-size:13px;opacity:.9;margin-bottom:20px}
+    .poster-left .verse{font-size:12.5px;opacity:.85;line-height:1.8;border-top:1px solid rgba(255,255,255,.3);padding-top:14px}
+    .poster-right{padding:34px 28px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center}
+    .qr-box{background:#fff;border:2px dashed var(--gold);border-radius:14px;padding:16px;display:inline-flex;flex-direction:column;align-items:center;gap:8px}
+    .qr-box canvas,.qr-box img{width:150px;height:150px}
+    .qr-box .qr-tip{font-size:12.5px;color:var(--primary-dark);font-weight:700}
+    .poster-right .p-name{font-size:28px;font-weight:800;color:var(--primary-dark)}
+    .poster-right .p-info{font-size:14px;color:var(--ink);line-height:1.9}
+    .poster-right .p-info b{color:var(--primary-dark)}
+    .poster-right .p-note{font-size:12.5px;color:var(--ink-soft);line-height:1.7;background:var(--gold-soft);border-radius:10px;padding:10px 14px}
+
+    /* 通用入口海报 */
+    .poster.general .poster-left{background:linear-gradient(160deg,#8a6d3b,#6b5430 70%,#54401f)}
+    .poster.general .qr-box{border-color:#8a6d3b}
+
+    @media (max-width:640px){
+      .poster{grid-template-columns:1fr}
+      .poster-left{padding:26px 20px}
+      .poster-right{padding:24px 20px}
+    }
+
+    /* 打印：每个场地一张 A4 */
+    @media print{
+      body{background:#fff}
+      .toolbar{display:none}
+      .posters{gap:0;padding:0;max-width:100%}
+      .poster{width:210mm;min-height:297mm;border-radius:0;box-shadow:none;page-break-after:always;grid-template-columns:1fr 1.1fr}
+      .poster:last-child{page-break-after:auto}
+      .poster-left,.poster-right{padding:20mm 16mm}
+    }
+  </style>
+</head>
+<body>
+  <div class="toolbar">
+    <div>
+      <h1>场地预约 · 二维码海报</h1>
+      <p>打印后张贴在每个场地门口，家人扫码即可查看预约说明并预约</p>
+    </div>
+    <button class="btn" onclick="window.print()">🖨️ 打印全部海报</button>
+  </div>
+
+  <div class="posters" id="posters"></div>
+
+  <script src="qrcode.js"></script>
+  <script src="data.js"></script>
+  <script>
+    const BASE = 'https://lqjymnl2026.github.io/venue-booking/';
+    const CHURCH = '教会';
+
+    function qr(container, text, size) {
+      container.innerHTML = '';
+      try { new QRCode(container, { text, width: size, height: size, correctLevel: QRCode.CorrectLevel.M }); }
+      catch (e) { container.textContent = '二维码生成失败'; }
+    }
+
+    function posterHTML(v, opts = {}) {
+      const isGeneral = opts.general;
+      const name = isGeneral ? '预约总入口' : v.name;
+      const link = isGeneral ? BASE : BASE + '?venue=' + v.id;
+      return `
+        <article class="poster${isGeneral ? ' general' : ''}">
+          <div class="poster-left">
+            <div>
+              <p class="church">${CHURCH} · VENUE BOOKING</p>
+              <h2>${isGeneral ? '场地预约' : '场地预约'}</h2>
+              <p class="sub">${isGeneral ? '扫码查看全部场地并预约' : '扫码预约 · ' + v.name}</p>
+            </div>
+            <p class="verse">【彼前4:10】各人要照所得的恩赐彼此服侍，作神百般恩赐的好管家</p>
+          </div>
+          <div class="poster-right">
+            <h3 class="p-name">${isGeneral ? '扫码进入预约' : v.name}</h3>
+            <div class="qr-box"><div class="qr" data-link="${link}"></div><span class="qr-tip">📱 扫码查看 / 预约</span></div>
+            ${isGeneral ? `
+              <div class="p-info">打开后查看<b>场地明细、布局、守则</b><br>并可直接<b>在线预约</b></div>` : `
+              <div class="p-info">
+                负责人：<b>${v.manager}</b> ${v.phone ? '（' + v.phone + '）' : '（电话待补充）'}<br>
+                可容纳：${v.capacity}<br>
+                预约要求：${v.audience}
+              </div>
+              <div class="p-note">✅ 使用结束请按场地内「恢复清单」整理场地并拍照打卡<br>⏰ 至少提前一天预约</div>`}
+          </div>
+        </article>`;
+    }
+
+    function render() {
+      const wrap = document.getElementById('posters');
+      // 通用入口海报
+      wrap.innerHTML = posterHTML(null, { general: true });
+      // 每个场地一张
+      VENUES.forEach(v => { wrap.innerHTML += posterHTML(v); });
+      // 生成二维码
+      document.querySelectorAll('.qr').forEach(el => qr(el, el.dataset.link, 150));
+    }
+    render();
+  </script>
+</body>
+</html>
