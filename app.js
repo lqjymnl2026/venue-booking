@@ -11,6 +11,8 @@ const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&a
 const LS_BOOK = 'vv_bookings_v1';
 const LS_CHECKIN = 'vv_checkins_v1';
 const LS_DEMO = 'vv_demo_removed_v1';
+const LS_REMIND_FIRED = 'vv_reminders_fired_v1';
+const SYNC_CHANNEL = 'venue-booking-sync';
 
 function toast(msg) {
   const t = $('#toast');
@@ -28,6 +30,69 @@ function setLS(key, val) {
   try { localStorage.setItem(key, JSON.stringify(val)); } catch (e) { /* 存储已满等 */ }
 }
 
+function getRemindersFired(){ return getLS(LS_REMIND_FIRED, []); }
+function setRemindersFired(arr){ setLS(LS_REMIND_FIRED, arr); }
+function syncBroadcast(){ try { const ch = new BroadcastChannel(SYNC_CHANNEL); ch.postMessage({ type:'refresh' }); ch.close(); } catch(e){} }
+function setupSyncListener(){
+  try {
+    const ch = new BroadcastChannel(SYNC_CHANNEL);
+    ch.onmessage = () => { renderBoard(); renderStats(); };
+    window._syncCh = ch;
+  } catch(e){}
+}
+function requestNotifyPermission(){
+  if (!('Notification' in window)) { toast('当前浏览器不支持通知提醒'); return false; }
+  if (Notification.permission === 'granted') { toast('🔔 通知已开启'); return true; }
+  Notification.requestPermission().then(p => { toast(p === 'granted' ? '🔔 通知已开启' : '通知未授权，无法提醒'); });
+  return false;
+}
+function showNotify(title, body){
+  try {
+    if (!('Notification' in window) || Notification.permission !== 'granted') return;
+    const n = new Notification(title, { body });
+    setTimeout(() => n.close(), 15000);
+  } catch(e){}
+}
+function scheduleReminder(rec){
+  if (!rec.date) { toast('未填写具体日期，无法设置前一天提醒（可补填日期）'); return; }
+  const d = new Date(rec.date + 'T08:00:00');
+  d.setDate(d.getDate() - 1);
+  const delay = d.getTime() - Date.now();
+  if (delay > 0 && delay <= 24*3600*1000) {
+    setTimeout(() => {
+      const v = VENUES.find(x => x.id === rec.venueId);
+      showNotify('⏰ 明天有场地预约', `${v.name} ${rec.day} ${SLOTS.find(x=>x.id===rec.slot).label}\n${rec.area}｜${rec.theme}`);
+      toast('⏰ 提醒：明天 ' + v.name + ' 有预约');
+    }, delay);
+    toast('⏰ 已设置预约前一天提醒');
+  } else if (delay > 0) {
+    toast('⏰ 已记录，打开页面时会在前一天提醒');
+  } else {
+    toast('⚠️ 预约日期已过期，无法设置提醒');
+  }
+}
+function checkDueReminders(){
+  const bookings = getLS(LS_BOOK, []);
+  if (!bookings.length) return;
+  const fired = getRemindersFired();
+  const now = Date.now();
+  const due = [];
+  bookings.forEach(b => {
+    if (!b.date || fired.includes(b.id)) return;
+    const d = new Date(b.date + 'T08:00:00');
+    d.setDate(d.getDate() - 1);
+    const t = d.getTime();
+    if (t <= now && now - t < 24*3600*1000) due.push(b);
+  });
+  if (!due.length) return;
+  showNotify('⏰ 明天有场地预约', due.map(b => {
+    const vv = VENUES.find(x => x.id === b.venueId);
+    const ss = SLOTS.find(x => x.id === b.slot);
+    return `${vv ? vv.name : '场地'} ${b.day} ${ss ? ss.label : ''}｜${b.area} ${b.theme || ''}`;
+  }).join('\n'));
+  due.forEach(b => fired.push(b.id));
+  setRemindersFired(fired);
+}
 function todayCN() {
   const d = new Date();
   const w = ['周日','周一','周二','周三','周四','周五','周六'][d.getDay()];
@@ -308,11 +373,21 @@ function initBookForm() {
     const text = lines.join('\n');
     $('#modalText').textContent = text;
 
-    // 保存到本地看板
+    // 保存到本地看板（完整台账）
     const bookings = getLS(LS_BOOK, []);
-    bookings.push({ id: 'u' + Date.now(), venueId: f.venueId, day: f.day, slot: f.slot, area: f.area, theme: f.theme });
+    const rec = {
+      id: 'u' + Date.now(),
+      venueId: f.venueId, day: f.day, slot: f.slot,
+      area: f.area, contact: f.contact, phone: f.phone,
+      date: f.date, theme: f.theme, audience: f.audience,
+      count: f.count, note: f.note, ts: new Date().toISOString(), demo: false
+    };
+    bookings.push(rec);
     setLS(LS_BOOK, bookings);
     renderBoard();
+    renderStats();
+    syncBroadcast();
+    if ($('#remindCheck').checked) scheduleReminder(rec);
 
     const callBtn = $('#callBtn');
     if (v.phone) {
@@ -510,6 +585,81 @@ function renderContacts() {
 }
 
 /* =========================================================
+   8. 使用统计 / 导出台账 / 深链接
+   ========================================================= */
+function renderStats() {
+  const bookings = allBookings();
+  const byVenue = {}, bySlot = {}, byDay = {};
+  bookings.forEach(b => {
+    byVenue[b.venueId] = (byVenue[b.venueId]||0)+1;
+    bySlot[b.slot] = (bySlot[b.slot]||0)+1;
+    byDay[b.day] = (byDay[b.day]||0)+1;
+  });
+  const venueRows = Object.entries(byVenue)
+    .map(([id,c]) => ({ name: (VENUES.find(v=>v.id===id)||{}).name||id, c }))
+    .sort((a,b)=>b.c-a.c);
+  const vMax = Math.max(1, ...venueRows.map(r=>r.c));
+  $('#statVenues').innerHTML = venueRows.length
+    ? venueRows.map((r,i) => `<div class="bar-row${i===0?' top':''}">
+        <span class="b-label">${esc(r.name)}</span>
+        <div class="bar-track"><div class="bar-fill" style="width:${(r.c/vMax*100).toFixed(0)}%"></div></div>
+        <span class="b-val">${r.c}</span></div>`).join('')
+    : '<p class="records-empty">暂无数据</p>';
+  const slotRows = SLOTS.map(s => ({ name: s.label, c: bySlot[s.id]||0 }));
+  const sMax = Math.max(1, ...slotRows.map(r=>r.c));
+  $('#statSlots').innerHTML = slotRows.map(r => `<div class="bar-row">
+      <span class="b-label">${r.name}</span>
+      <div class="bar-track"><div class="bar-fill" style="width:${(r.c/sMax*100).toFixed(0)}%"></div></div>
+      <span class="b-val">${r.c}</span></div>`).join('');
+  const dayRows = DAYS.map(d => ({ name: d, c: byDay[d]||0 }));
+  const dMax = Math.max(1, ...dayRows.map(r=>r.c));
+  $('#statDays').innerHTML = dayRows.map(r => `<div class="bar-row">
+      <span class="b-label">${r.name}</span>
+      <div class="bar-track"><div class="bar-fill" style="width:${(r.c/dMax*100).toFixed(0)}%"></div></div>
+      <span class="b-val">${r.c}</span></div>`).join('');
+  const demoOn = !getLS(LS_DEMO, false);
+  $('#statNote').innerHTML = `共 <b>${bookings.length}</b> 条预约记录${demoOn ? '（含 4 条示例数据，可在看板清除）' : ''} · 数据保存在本机浏览器`;
+}
+
+function exportCSV() {
+  const bookings = allBookings();
+  if (!bookings.length) { toast('暂无预约数据可导出'); return; }
+  const header = ['序号','场地','牧区/团队','联系人','电话','周几','时段','具体日期','活动主题','参加对象','人数','备注','来源','提交时间'];
+  const rows = bookings.map((b,i) => [
+    i+1,
+    (VENUES.find(v=>v.id===b.venueId)||{}).name||b.venueId,
+    b.area||'', b.contact||'', b.phone||'',
+    b.day||'', (SLOTS.find(s=>s.id===b.slot)||{}).label||b.slot||'',
+    b.date||'', b.theme||'', b.audience||'', b.count||'',
+    b.note||'', b.demo ? '示例' : '正式', b.ts ? new Date(b.ts).toLocaleString('zh-CN',{hour12:false}) : ''
+  ]);
+  const csv = [header, ...rows].map(r => r.map(cell => {
+    const str = String(cell == null ? '' : cell);
+    return /[",\n]/.test(str) ? '"' + str.replace(/"/g,'""') + '"' : str;
+  }).join(',')).join('\r\n');
+  const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = '场地预约台账_' + new Date().toISOString().slice(0,10) + '.csv';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(a.href);
+  toast('📥 台账已导出（CSV，可用 Excel 打开）');
+}
+
+function handleDeepLink() {
+  try {
+    const vid = new URLSearchParams(location.search).get('venue');
+    if (vid && VENUES.some(v => v.id === vid)) {
+      $('#boardVenue').value = vid;
+      renderBoard();
+      selectLayout(vid);
+    }
+  } catch(e){}
+}
+
+/* =========================================================
    初始化
    ========================================================= */
 document.addEventListener('DOMContentLoaded', () => {
@@ -521,4 +671,10 @@ document.addEventListener('DOMContentLoaded', () => {
   initModal();
   initCheckin();
   renderContacts();
+  renderStats();
+  setupSyncListener();
+  checkDueReminders();
+  handleDeepLink();
+  $('#remindBtn').addEventListener('click', requestNotifyPermission);
+  $('#exportBtn').addEventListener('click', exportCSV);
 });
