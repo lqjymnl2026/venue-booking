@@ -1,5 +1,5 @@
 /* =========================================================
-   教会场地预约 · 页面逻辑
+   场地预约 · 页面逻辑
    ========================================================= */
 'use strict';
 
@@ -270,10 +270,10 @@ function renderRules() {
    ========================================================= */
 function demoBookings() {
   return [
-    { id:'demo1', venueId:'duogongneng', day:'周六', slot:'morning', area:'仁爱牧区', theme:'牧区联合聚会', demo:true },
-    { id:'demo2', venueId:'peixunshi1',  day:'周三', slot:'evening', area:'喜乐牧区', theme:'组长培训', demo:true },
-    { id:'demo3', venueId:'shangquan',   day:'周五', slot:'afternoon', area:'恩典牧区', theme:'茶叙接待', demo:true },
-    { id:'demo4', venueId:'houbaizhang-dating', day:'周日', slot:'morning', area:'主日学', theme:'教师聚会', demo:true }
+    { id:'demo1', venueId:'duogongneng', day:'周六', slot:'morning', area:'仁爱团队', theme:'团队联合活动', demo:true },
+    { id:'demo2', venueId:'peixunshi1',  day:'周三', slot:'evening', area:'喜乐团队', theme:'组长培训', demo:true },
+    { id:'demo3', venueId:'shangquan',   day:'周五', slot:'afternoon', area:'同心团队', theme:'茶叙接待', demo:true },
+    { id:'demo4', venueId:'houbaizhang-dating', day:'周日', slot:'morning', area:'儿童组', theme:'教师活动', demo:true }
   ];
 }
 
@@ -360,7 +360,7 @@ function initBookForm() {
     const slot = SLOTS.find(s => s.id === f.slot);
     const lines = [
       '【场地预约申请】',
-      `牧区/团队：${f.area}`,
+      `团队/部门：${f.area}`,
       `联系人：${f.contact}（${f.phone}）`,
       `场地：${v.name}`,
       `时间：${f.date ? f.date + ' ' : ''}${f.day} ${slot.label}（${slot.time}）`,
@@ -624,7 +624,7 @@ function renderStats() {
 function exportCSV() {
   const bookings = allBookings();
   if (!bookings.length) { toast('暂无预约数据可导出'); return; }
-  const header = ['序号','场地','牧区/团队','联系人','电话','周几','时段','具体日期','活动主题','参加对象','人数','备注','来源','提交时间'];
+  const header = ['序号','场地','团队/部门','联系人','电话','周几','时段','具体日期','活动主题','参加对象','人数','备注','来源','提交时间'];
   const rows = bookings.map((b,i) => [
     i+1,
     (VENUES.find(v=>v.id===b.venueId)||{}).name||b.venueId,
