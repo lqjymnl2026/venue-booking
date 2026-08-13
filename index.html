@@ -32,6 +32,8 @@
       <a href="#layouts">布局图</a>
       <a href="#process">预约流程</a>
       <a href="#board">可约看板</a>
+      <a href="#stats">统计</a>
+      <a href="posters.html">二维码海报</a>
       <a href="#book">在线预约</a>
       <a href="#checkin">恢复打卡</a>
       <a href="#rules">守则制度</a>
@@ -105,11 +107,37 @@
           <select id="boardVenue"></select>
         </label>
         <button type="button" id="toggleDemo" class="btn btn-small">清除示例数据</button>
+        <button type="button" id="remindBtn" class="btn btn-small">🔔 开启预约提醒</button>
+        <button type="button" id="exportBtn" class="btn btn-small">📥 导出台账(Excel)</button>
       </div>
       <div class="board-wrap">
         <table class="board-table" id="boardGrid"></table>
       </div>
       <p class="note" id="boardNote"></p>
+    </section>
+
+
+    <!-- ===== 使用统计 ===== -->
+    <section id="stats" class="section">
+      <div class="section-head">
+        <h2>📊 使用统计</h2>
+        <p class="section-desc">看看哪个场地最受欢迎、哪时段最抢手。<b>基于本机预约数据（含示例）</b>，接入云端同步后即为全教会实时数据。</p>
+      </div>
+      <div class="stats-grid">
+        <article class="stat-card">
+          <h3>🏟️ 场地热度 TOP</h3>
+          <div id="statVenues" class="bars"></div>
+        </article>
+        <article class="stat-card">
+          <h3>🕐 时段热度</h3>
+          <div id="statSlots" class="bars"></div>
+        </article>
+        <article class="stat-card">
+          <h3>📅 周几热度</h3>
+          <div id="statDays" class="bars"></div>
+        </article>
+      </div>
+      <p class="note" id="statNote"></p>
     </section>
 
     <!-- ===== 在线预约 ===== -->
@@ -282,7 +310,7 @@
       【彼前4:10】各人要照所得的恩赐彼此服侍，作神百般恩赐的好管家
     </div>
     <p>教会场地预约 · 愿每一个场地都被好好珍惜 ✦</p>
-    <p class="footer-small">本站为静态网页，可分享链接使用 · 数据可在 <code>data.js</code> 中修改</p>
+    <p class="footer-small">📱 <a href="posters.html" style="color:inherit">打印场地二维码海报</a> · 本站为静态网页，可分享链接使用 · 数据可在 <code>data.js</code> 中修改</p>
   </footer>
 
   <!-- ===== 预约结果弹窗 ===== -->
@@ -296,6 +324,10 @@
         <button type="button" class="btn btn-primary" id="copyBtn">📋 一键复制</button>
         <a href="#" class="btn btn-ghost" id="callBtn">📞 拨打负责人电话</a>
       </div>
+      <label class="remind-check">
+        <input type="checkbox" id="remindCheck" checked>
+        <span>⏰ 预约前一天提醒我（需开启浏览器通知；提醒在打开网页时生效）</span>
+      </label>
       <p class="form-tip">复制后请在微信中粘贴发送给对应场地负责人，确认无误后预约生效。</p>
     </div>
   </div>
